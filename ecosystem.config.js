@@ -9,6 +9,7 @@ module.exports = {
       autorestart: true,
       max_restarts: 10,
       restart_delay: 2000,
+      shell: true,
     },
     {
       name: 'resomd',
@@ -18,6 +19,7 @@ module.exports = {
       instances: 1,
       autorestart: true,
       restart_delay: 2000,
+      shell: true,
     },
   ],
 };
