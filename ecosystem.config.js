@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'resomd-api',
-      script: 'pnpm',
+      script: 'npm',
       args: 'start',
       cwd: './apps/api',
       instances: 1,
@@ -13,7 +13,7 @@ module.exports = {
     },
     {
       name: 'resomd',
-      script: 'pnpm',
+      script: 'npm',
       args: 'start',
       cwd: './apps/web',
       instances: 1,
