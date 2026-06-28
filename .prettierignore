@@ -1,6 +1,8 @@
 node_modules/
 coverage/
 .pnpm-store/
+dist/
+.turbo/
 pnpm-lock.yaml
 package-lock.json
 pnpm-lock.yaml
