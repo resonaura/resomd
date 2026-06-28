@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "start": "serve dist -s -l 3000",
+    "start": "serve dist -s -l 3004",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
