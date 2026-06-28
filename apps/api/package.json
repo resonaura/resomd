@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node dist/src/main.js",
     "dev": "nest start --watch",
     "build": "nest build",
-    "start": "node dist/src/main.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

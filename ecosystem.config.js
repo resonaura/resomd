@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'resomd-api',
-      script: 'dist/src/main.js', // Path to the compiled NestJS server main file
+      script: 'pnpm',
+      args: 'start',
       cwd: './apps/api',
       instances: 1,
       autorestart: true,
@@ -11,7 +12,8 @@ module.exports = {
     },
     {
       name: 'resomd',
-      script: 'dist/src/main.js',
+      script: 'pnpm',
+      args: 'start',
       cwd: './apps/web',
       instances: 1,
       autorestart: true,
