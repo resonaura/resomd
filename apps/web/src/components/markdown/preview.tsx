@@ -123,13 +123,26 @@ export const MarkdownPreview = forwardRef<HTMLDivElement, MarkdownPreviewProps>(
       [processedContent, onSelectBlock]
     );
 
+    // Helper: the source line where a markdown node starts, for scroll sync.
+    const sourceLine = (node: ExtraProps['node']): number | undefined =>
+      node?.position?.start?.line;
+
     const markdownComponents: Components = {
-      table: ({ children }: { children?: ReactNode }) => (
-        <div className="markdown-table-wrapper">
+      table: ({
+        node,
+        children,
+      }: {
+        node?: ExtraProps['node'];
+        children?: ReactNode;
+      }) => (
+        <div
+          className="markdown-table-wrapper"
+          data-source-line={sourceLine(node)}
+        >
           <table>{children}</table>
         </div>
       ),
-      img: ({ src, alt, ...props }) => {
+      img: ({ node, src, alt, ...props }) => {
         if (alt === 'RSNRA' || src === 'rsnra-logo') {
           return (
             <span className="rsnra-logo-container mx-1 inline-flex -translate-y-[0.06em] items-center align-middle select-none">
@@ -146,7 +159,14 @@ export const MarkdownPreview = forwardRef<HTMLDivElement, MarkdownPreviewProps>(
             </span>
           );
         }
-        return <img src={src} alt={alt} {...props} />;
+        return (
+          <img
+            src={src}
+            alt={alt}
+            data-source-line={sourceLine(node)}
+            {...props}
+          />
+        );
       },
       // Task list items — render as checkbox-style list items
       li: ({ node, children, ...props }) => {
@@ -158,6 +178,7 @@ export const MarkdownPreview = forwardRef<HTMLDivElement, MarkdownPreviewProps>(
           return (
             <li
               className="markdown-task-item"
+              data-source-line={sourceLine(node)}
               onClick={e => handleClickBlock(node, e)}
             >
               {children}
@@ -165,36 +186,86 @@ export const MarkdownPreview = forwardRef<HTMLDivElement, MarkdownPreviewProps>(
           );
         }
 
-        return <li onClick={e => handleClickBlock(node, e)}>{children}</li>;
+        return (
+          <li
+            data-source-line={sourceLine(node)}
+            onClick={e => handleClickBlock(node, e)}
+          >
+            {children}
+          </li>
+        );
       },
       p: ({ node, children }) => (
-        <p onClick={e => handleClickBlock(node, e)}>{children}</p>
+        <p
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </p>
       ),
       h1: ({ node, children }) => (
-        <h1 onClick={e => handleClickBlock(node, e)}>{children}</h1>
+        <h1
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h1>
       ),
       h2: ({ node, children }) => (
-        <h2 onClick={e => handleClickBlock(node, e)}>{children}</h2>
+        <h2
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h2>
       ),
       h3: ({ node, children }) => (
-        <h3 onClick={e => handleClickBlock(node, e)}>{children}</h3>
+        <h3
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h3>
       ),
       h4: ({ node, children }) => (
-        <h4 onClick={e => handleClickBlock(node, e)}>{children}</h4>
+        <h4
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h4>
       ),
       h5: ({ node, children }) => (
-        <h5 onClick={e => handleClickBlock(node, e)}>{children}</h5>
+        <h5
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h5>
       ),
       h6: ({ node, children }) => (
-        <h6 onClick={e => handleClickBlock(node, e)}>{children}</h6>
+        <h6
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </h6>
       ),
       blockquote: ({ node, children }) => (
-        <blockquote onClick={e => handleClickBlock(node, e)}>
+        <blockquote
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
           {children}
         </blockquote>
       ),
       pre: ({ node, children }) => (
-        <pre onClick={e => handleClickBlock(node, e)}>{children}</pre>
+        <pre
+          data-source-line={sourceLine(node)}
+          onClick={e => handleClickBlock(node, e)}
+        >
+          {children}
+        </pre>
       ),
       // Render input checkboxes for task lists as disabled checkboxes
       input: ({ checked, ...props }) => (
@@ -211,13 +282,12 @@ export const MarkdownPreview = forwardRef<HTMLDivElement, MarkdownPreviewProps>(
     return (
       <div
         ref={scrollContainerRef}
-        className="markdown-preview-scroll flex h-full justify-center overflow-y-auto px-6 py-8"
+        className="markdown-preview-scroll flex h-full justify-center overflow-y-auto px-6 pt-8 pb-32"
       >
-        <div ref={ref} className="markdown-preview w-full max-w-[720px]">
+        <div ref={ref} className="markdown-preview w-full max-w-[720px] pb-8">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkGithubBlockquoteAlert]}
             rehypePlugins={[rehypeHighlight, rehypeLobehubEmoji]}
-            remarkRehypeOptions={{ sourcePos: true } as never}
             components={markdownComponents}
           >
             {processedContent}

@@ -1,7 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  CheckIcon,
-  CloudIcon,
   ColumnsIcon,
   DownloadIcon,
   EyeIcon,
@@ -11,7 +9,6 @@ import {
   LogOutIcon,
   MenuIcon,
   MoonIcon,
-  PanelLeftIcon,
   PrinterIcon,
   ShieldIcon,
   SquarePenIcon,
@@ -24,6 +21,7 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { FileSidebar } from '@/components/file-sidebar';
+import { Menubar, type MenubarActions } from '@/components/menubar';
 import { useTheme } from '@/components/theme/provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -36,7 +34,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Tooltip,
@@ -47,7 +44,7 @@ import { AUTH_WEB_URL } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { print } from '@/lib/pdf';
 import { exportNodeToPdfViaServer } from '@/lib/pdf-server';
-import type { SyncStatus } from '@/lib/sync-status';
+import type { Platform } from '@/lib/platform';
 
 interface AppToolbarProps {
   content: string;
@@ -55,11 +52,12 @@ interface AppToolbarProps {
   previewRef: React.RefObject<HTMLDivElement | null>;
   mode: 'editor' | 'split' | 'preview';
   onModeChange: (mode: 'editor' | 'split' | 'preview') => void;
-  docName?: string | null;
-  syncStatus?: SyncStatus;
-  sidebarVisible?: boolean;
-  onToggleSidebar?: () => void;
   selectedDocId?: string | null;
+  // Menubar (now embedded in the toolbar)
+  menubarActions: MenubarActions;
+  platform: Platform;
+  sidebarVisible: boolean;
+  onAbout: () => void;
 }
 
 export function AppToolbar({
@@ -68,11 +66,11 @@ export function AppToolbar({
   previewRef,
   mode,
   onModeChange,
-  docName,
-  syncStatus,
-  sidebarVisible = false,
-  onToggleSidebar,
   selectedDocId = null,
+  menubarActions,
+  platform,
+  sidebarVisible,
+  onAbout,
 }: AppToolbarProps) {
   const { theme, setTheme } = useTheme();
   const { user, logout, signIn } = useAuth();
@@ -144,8 +142,8 @@ export function AppToolbar({
   return (
     <>
       <header className="bg-background border-border flex h-12 shrink-0 items-center justify-between border-b px-2 transition-colors duration-300 sm:px-3">
-        {/* ── Left: Sidebar toggle + Logo ── */}
-        <div className="flex items-center gap-1.5">
+        {/* ── Left: Logo ── */}
+        <div className="flex items-center gap-0">
           {/* Mobile: hamburger opens file sidebar as a slide-over */}
           {user && (
             <Tooltip>
@@ -165,56 +163,19 @@ export function AppToolbar({
             </Tooltip>
           )}
 
-          {/* Desktop: panel toggle */}
-          {user && onToggleSidebar && (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className={sidebarVisible ? '' : 'text-muted-foreground'}
-                    onClick={onToggleSidebar}
-                  />
-                }
-              >
-                <PanelLeftIcon className="size-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                {sidebarVisible ? 'Hide files' : 'Show files'}
-              </TooltipContent>
-            </Tooltip>
-          )}
-
           <img
             src={theme === 'dark' ? '/icon.svg' : '/icon-light.svg'}
             alt="ResoMD"
-            className="size-5 shrink-0"
+            className="mr-2 ml-1 size-5 shrink-0"
           />
 
-          {/* Doc name + sync status — desktop only */}
-          {docName && (
-            <>
-              <Separator orientation="vertical" className="mx-1 h-5" />
-              <div className="hidden items-center gap-1.5 text-xs sm:flex">
-                <span className="text-foreground max-w-32 truncate font-medium">
-                  {docName}
-                </span>
-                {syncStatus === 'saving' && (
-                  <Loader2Icon className="size-3.5 animate-spin" />
-                )}
-                {syncStatus === 'synced' && (
-                  <CheckIcon className="size-3.5 text-emerald-500" />
-                )}
-                {syncStatus === 'error' && (
-                  <span className="text-destructive">Sync failed</span>
-                )}
-                {(syncStatus === 'saving' || syncStatus === 'synced') && (
-                  <CloudIcon className="text-muted-foreground size-3.5" />
-                )}
-              </div>
-            </>
-          )}
+          {/* Menu bar — embedded in the toolbar with breathing room from the logo */}
+          <Menubar
+            actions={menubarActions}
+            platform={platform}
+            sidebarVisible={sidebarVisible}
+            onAbout={onAbout}
+          />
 
           <input
             ref={fileInputRef}
@@ -226,7 +187,7 @@ export function AppToolbar({
         </div>
 
         {/* ── Center: Mode toggle ── */}
-        <div className="flex items-center">
+        <div className="absolute left-1/2 flex -translate-x-1/2 items-center">
           <div className="bg-muted flex h-8 items-center gap-0.5 rounded-lg p-0.5">
             {[
               {
@@ -284,7 +245,6 @@ export function AppToolbar({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="text-muted-foreground hover:text-foreground"
                     onClick={() => fileInputRef.current?.click()}
                   />
                 }
@@ -300,7 +260,6 @@ export function AppToolbar({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="text-muted-foreground hover:text-foreground"
                     onClick={handleDownloadMarkdown}
                   />
                 }
@@ -316,7 +275,6 @@ export function AppToolbar({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="text-muted-foreground hover:text-foreground"
                     onClick={handlePrint}
                     disabled={isExporting}
                   />
@@ -332,13 +290,7 @@ export function AppToolbar({
           <div className="flex sm:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-muted-foreground"
-                  />
-                }
+                render={<Button variant="ghost" size="icon-sm" />}
               >
                 <FileDownIcon className="size-4" />
               </DropdownMenuTrigger>
@@ -359,18 +311,33 @@ export function AppToolbar({
             </DropdownMenu>
           </div>
 
-          <Separator orientation="vertical" className="mx-0.5 h-5" />
-
-          {/* Theme toggle */}
+          {/* Export PDF */}
           <Tooltip>
             <TooltipTrigger
               render={
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="text-muted-foreground hover:text-foreground relative overflow-hidden"
-                  onClick={cycleTheme}
+                  className="hidden sm:flex"
+                  onClick={handleExportPdf}
+                  disabled={isExporting}
                 />
+              }
+            >
+              {isExporting ? (
+                <Loader2Icon className="size-4 animate-spin" />
+              ) : (
+                <FileDownIcon className="size-4" />
+              )}
+            </TooltipTrigger>
+            <TooltipContent>Export PDF</TooltipContent>
+          </Tooltip>
+
+          {/* Theme toggle */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" onClick={cycleTheme} />
               }
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -391,28 +358,6 @@ export function AppToolbar({
               </AnimatePresence>
             </TooltipTrigger>
             <TooltipContent>Toggle theme</TooltipContent>
-          </Tooltip>
-
-          {/* Export PDF */}
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="secondary"
-                  size="icon-sm"
-                  className="hidden sm:flex"
-                  onClick={handleExportPdf}
-                  disabled={isExporting}
-                />
-              }
-            >
-              {isExporting ? (
-                <Loader2Icon className="size-4 animate-spin" />
-              ) : (
-                <FileDownIcon className="size-4" />
-              )}
-            </TooltipTrigger>
-            <TooltipContent>Export PDF</TooltipContent>
           </Tooltip>
 
           {/* User menu / Sign in */}

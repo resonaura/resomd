@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronRightIcon,
+  FilePlusIcon,
   FileTextIcon,
   FolderIcon,
   FolderPlusIcon,
-  FilePlusIcon,
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
@@ -41,11 +41,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { ApiError } from '@/lib/api';
 import {
   createDocument,
@@ -58,6 +53,7 @@ import {
   type FileTreeNode,
 } from '@/lib/files-api';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -191,7 +187,7 @@ function TreeNode({
     <div>
       <div
         className={cn(
-          'group relative flex items-center rounded-lg transition-colors',
+          'group relative flex h-7 items-center rounded-[55px] transition-colors',
           isSelected ? 'bg-primary/10' : 'hover:bg-muted/60 active:bg-muted'
         )}
         style={{ paddingLeft: `${indent}px`, paddingRight: '4px' }}
@@ -354,7 +350,7 @@ function TreeNode({
             {node.children.length === 0 ? (
               <p
                 className="text-muted-foreground/50 py-1 text-xs"
-                style={{ paddingLeft: `${(depth + 1) * 14 + 28}px` }}
+                style={{ paddingLeft: `${(depth + 1) * 14 + 36}px` }}
               >
                 Empty
               </p>
@@ -417,9 +413,14 @@ function TreeNode({
 
 interface FileSidebarProps {
   selectedDocId?: string | null;
+  /** When provided, called instead of navigating to /d/:id. */
+  onOpenDocument?: (id: string) => void;
 }
 
-export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
+export function FileSidebar({
+  selectedDocId = null,
+  onOpenDocument,
+}: FileSidebarProps) {
   const navigate = useNavigate();
 
   const [tree, setTree] = React.useState<FileTreeNode[] | null>(null);
@@ -464,7 +465,11 @@ export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
   };
 
   const handleSelectDocument = (id: string) => {
-    navigate(`/d/${id}`);
+    if (onOpenDocument) {
+      onOpenDocument(id);
+    } else {
+      navigate(`/d/${id}`);
+    }
   };
 
   const handleCreateFolder = async () => {
@@ -485,7 +490,11 @@ export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
     setIsBusy(true);
     try {
       const doc = await createDocument({ name: 'Untitled.md' });
-      navigate(`/d/${doc.id}`);
+      if (onOpenDocument) {
+        onOpenDocument(doc.id);
+      } else {
+        navigate(`/d/${doc.id}`);
+      }
     } catch (error) {
       toast.error(
         error instanceof ApiError ? error.message : 'Failed to create document'
@@ -564,11 +573,26 @@ export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
 
   return (
     <div className="bg-muted/20 border-border flex h-full w-full flex-col border-r">
-      {/* Toolbar */}
-      <div className="border-border flex h-10 shrink-0 items-center justify-between border-b px-3">
-        <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-          Files
-        </span>
+      {/* Search */}
+      <div className="border-border flex gap-1 border-b px-2 py-2">
+        <div className="relative">
+          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search"
+            className="bord box-border h-7 pr-7 pl-8 text-sm"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+            >
+              <XIcon className="size-3.5" />
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger
@@ -620,30 +644,8 @@ export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="border-border border-b px-2 py-2">
-        <div className="relative">
-          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search files…"
-            className="h-7 pr-7 pl-8 text-sm"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch('')}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2"
-            >
-              <XIcon className="size-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* File tree */}
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto py-1">
+      <div className="min-h-0 flex-1 gap-1 overflow-x-hidden overflow-y-auto px-2 py-2">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -705,6 +707,7 @@ export function FileSidebar({ selectedDocId = null }: FileSidebarProps) {
               initial="hidden"
               animate="visible"
               variants={{ hidden: {}, visible: {} }}
+              className="flex flex-col gap-1"
             >
               {(tree ?? []).map((node, i) => (
                 <motion.div

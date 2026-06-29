@@ -1,10 +1,11 @@
-import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
+import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import { useEffect, useRef } from 'react';
 
+import githubDarkTheme from '@/assets/monaco-themes/github-dark.json';
+import githubLightTheme from '@/assets/monaco-themes/github-light.json';
 import { useResolvedTheme } from '@/components/theme/provider';
 import { Spinner } from '@/components/ui/spinner';
-import githubLightTheme from '@/assets/monaco-themes/github-light.json';
-import githubDarkTheme from '@/assets/monaco-themes/github-dark.json';
 
 export const GITHUB_LIGHT_THEME = 'github-light';
 export const GITHUB_DARK_THEME = 'github-dark';
@@ -24,12 +25,44 @@ export function MarkdownEditor({
   onMount,
 }: MarkdownEditorProps) {
   const resolvedTheme = useResolvedTheme();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const resizeRafRef = useRef(0);
 
-  const handleMount: OnMount = editor => {
-    editor.updateOptions({ tabSize: 2 });
-    editor.focus();
+  // Manual, debounced layout instead of Monaco's `automaticLayout: true`.
+  // automaticLayout uses a ResizeObserver that can enter a feedback loop with
+  // the animated resizable panels (layout changes container size -> observer
+  // fires -> layout() -> ...), which manifested as the editor growing without
+  // bound in editor-only mode. We observe the wrapper and relayout on a frame,
+  // which breaks the loop while staying responsive.
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(resizeRafRef.current);
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
+    };
+  }, []);
+
+  const handleMount: OnMount = editorInstance => {
+    editorRef.current = editorInstance;
+    editorInstance.updateOptions({ tabSize: 2 });
+    editorInstance.focus();
+
+    const wrapperEl = editorInstance.getDomNode()?.parentElement ?? null;
+    if (wrapperEl) {
+      const relayout = () => {
+        cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = requestAnimationFrame(() => {
+          editorRef.current?.layout();
+        });
+      };
+      const observer = new ResizeObserver(relayout);
+      observer.observe(wrapperEl);
+      resizeObserverRef.current = observer;
+    }
+
     if (onMount) {
-      onMount(editor);
+      onMount(editorInstance);
     }
   };
 
@@ -67,7 +100,7 @@ export function MarkdownEditor({
         smoothScrolling: true,
         cursorBlinking: 'smooth',
         wrappingStrategy: 'advanced',
-        automaticLayout: true,
+        automaticLayout: false,
       }}
     />
   );

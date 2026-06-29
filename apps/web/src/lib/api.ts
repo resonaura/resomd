@@ -27,7 +27,12 @@ export async function apiFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  // Only declare a JSON content type when there is an actual request body.
+  // Fastify rejects bodyless requests (e.g. DELETE) that advertise a JSON
+  // content-type with a 400 "Body cannot be empty" error.
+  if (options.body != null) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   const response = await fetch(`${API_URL}/v1${path}`, {
     ...options,
@@ -48,5 +53,9 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  // Some endpoints (e.g. DELETE) return 200 with an empty body. Parsing
+  // that as JSON throws, so treat an empty/missing body as no content.
+  const text = await response.text();
+  if (text.length === 0) return undefined as T;
+  return JSON.parse(text) as T;
 }
