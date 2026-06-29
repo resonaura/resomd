@@ -17,6 +17,9 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   {
@@ -26,7 +29,13 @@ export default defineConfig([
     rules: {
       'react-refresh/only-export-components': [
         'warn',
-        { allowExportNames: ['buttonVariants', 'tabsListVariants'] },
+        {
+          allowExportNames: [
+            'buttonVariants',
+            'tabsListVariants',
+            'badgeVariants',
+          ],
+        },
       ],
     },
   },

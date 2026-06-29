@@ -1,4 +1,4 @@
-# Resonaura - Stage Input List & Technical Rider
+# [RSNRA] Resonaura - Stage Input List & Technical Rider
 
 **Date:** June 27, 2026  
 **Band Name:** Resonaura
@@ -12,15 +12,17 @@
 > numbers) indicate equipment, connections, and channels that must be provided
 > by the venue on stage.
 
-| CH       | Source                                        | Audio Path                                                           | Interface CH | Connector Type       | Signal Level / Routing | Notes / Tech Specs |
-| :------- | :-------------------------------------------- | :------------------------------------------------------------------- | :----------- | :------------------- | :--------------------- | :----------------- |
-| **1/2**  | Playback: Bass (Stereo)                       | MOTU UltraLite mk3 -> **Stage Box**                                  | 3/4          | 2 x XLR (M)          | Balanced Line Level    | —                  |
-| **3/4**  | Playback: Percussion / Drum Machines (Stereo) | MOTU UltraLite mk3 -> **Stage Box**                                  | 5/6          | 2 x XLR (M)          | Balanced Line Level    | —                  |
-| **5/6**  | Playback: Synths & BVs (Stereo)               | MOTU UltraLite mk3 -> **Stage Box**                                  | 7/8          | 2 x XLR (M)          | Balanced Line Level    | —                  |
-| **7/8**  | Live Vocal Processing (Stereo)                | Shure Nexadyne 8/C -> Volt 276 -> **Stage Box**                      | 1/2          | 2 x 1/4" TS/TRS Jack | Balanced Line Level    | —                  |
-| **9/10** | Main Guitar: Processed Sound (Stereo)         | E Guitar -> Pedalboard -> Behringer UMC404HD -> **Stage Box**        | 1/2          | 2 x XLR (M)          | Balanced Line Level    | —                  |
-| **11**   | Vocalist's Guitar Amp Mic                     | E Guitar -> Egnater Tweaker 40W -> Sennheizer e835s -> **Stage Box** | —            | 1 x XLR (M)          | Microphone Level       | —                  |
-| —        | Live Bass Guitar                              | Bass Guitar -> **Bass Combo**                                        | —            | —                    | Instrument Level       | —                  |
+| CH       | Source                                        | Audio Path                                                           | INT | Connector            | Signal Level        | Notes |
+| :------- | :-------------------------------------------- | :------------------------------------------------------------------- | :-- | :------------------- | :------------------ | :---- |
+| **1/2**  | Playback: Bass (Stereo)                       | MOTU UltraLite mk3 -> **Stage Box**                                  | 3/4 | 2 x XLR (M)          | Balanced Line Level | —     |
+| **3/4**  | Playback: Percussion / Drum Machines (Stereo) | MOTU UltraLite mk3 -> **Stage Box**                                  | 5/6 | 2 x XLR (M)          | Balanced Line Level | —     |
+| **5/6**  | Playback: Synths & BVs (Stereo)               | MOTU UltraLite mk3 -> **Stage Box**                                  | 7/8 | 2 x XLR (M)          | Balanced Line Level | —     |
+| **7/8**  | Live Vocal Processing (Stereo)                | Shure Nexadyne 8/C -> Volt 276 -> **Stage Box**                      | 1/2 | 2 x 1/4" TS/TRS Jack | Balanced Line Level | —     |
+| **9/10** | Main Guitar: Processed Sound (Stereo)         | E Guitar -> Pedalboard -> Behringer UMC404HD -> **Stage Box**        | 1/2 | 2 x XLR (M)          | Balanced Line Level | —     |
+| **11**   | Vocalist's Guitar Amp Mic                     | E Guitar -> Egnater Tweaker 40W -> Sennheizer e835s -> **Stage Box** | —   | 1 x XLR (M)          | Microphone Level    | —     |
+| —        | Live Bass Guitar                              | Bass Guitar -> **Bass Combo**                                        | —   | —                    | Instrument Level    | —     |
+
+\* Interface Output
 
 ---
 

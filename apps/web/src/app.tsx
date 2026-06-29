@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import type { GroupImperativeHandle, Layout } from 'react-resizable-panels';
 import type { editor } from 'monaco-editor';
+import { toast } from 'sonner';
 
 import { AppToolbar } from '@/components/toolbar';
 import { MarkdownEditor } from '@/components/markdown/editor';
@@ -11,6 +13,11 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { Toaster } from '@/components/ui/sonner';
+import { ApiError } from '@/lib/api';
+import { getDocument, updateDocument } from '@/lib/files-api';
+import type { SyncStatus } from '@/lib/sync-status';
+
+const AUTOSAVE_DELAY_MS = 1000;
 
 const STORAGE_KEY_CONTENT = 'resomd:content';
 const STORAGE_KEY_MODE = 'resomd:mode';
@@ -66,9 +73,65 @@ export function App() {
   // Cancels the in-flight panel-resize animation, if any, before starting a new one
   const cancelPanelTransitionRef = useRef<(() => void) | null>(null);
 
+  // Cloud document sync: when opened via /d/:documentId the editor loads and
+  // autosaves a server-backed document instead of the local-only scratch buffer.
+  const { documentId } = useParams();
+  const navigate = useNavigate();
+  const [docName, setDocName] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const skipNextAutosaveRef = useRef(false);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_CONTENT, content);
-  }, [content]);
+    if (!documentId) {
+      return;
+    }
+
+    let isCancelled = false;
+    skipNextAutosaveRef.current = true;
+    getDocument(documentId)
+      .then(document => {
+        if (isCancelled) return;
+        setContent(document.content);
+        setDocName(document.name);
+        setSyncStatus('synced');
+      })
+      .catch(error => {
+        if (isCancelled) return;
+        toast.error(
+          error instanceof ApiError ? error.message : 'Failed to open document'
+        );
+        navigate('/files');
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [documentId, navigate]);
+
+  useEffect(() => {
+    if (!documentId) {
+      localStorage.setItem(STORAGE_KEY_CONTENT, content);
+      return;
+    }
+
+    if (skipNextAutosaveRef.current) {
+      skipNextAutosaveRef.current = false;
+      return;
+    }
+
+    setSyncStatus('saving');
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      updateDocument(documentId, { content })
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('error'));
+    }, AUTOSAVE_DELAY_MS);
+
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [content, documentId]);
 
   // Persist view mode setting in localStorage and update ref on changes
   useEffect(() => {
@@ -188,6 +251,25 @@ export function App() {
     return () => cancelPanelTransitionRef.current?.();
   }, []);
 
+  // A side-by-side split is unusable on phone-width screens (the toolbar
+  // hides the Split toggle below `sm`), so fall back to the editor pane
+  // alone if a narrow viewport ever ends up in split mode (e.g. a layout
+  // saved from a wider screen).
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 639px)');
+
+    const coerceIfNarrow = () => {
+      if (query.matches && modeRef.current === 'split') {
+        applyMode('editor');
+      }
+    };
+
+    coerceIfNarrow();
+    query.addEventListener('change', coerceIfNarrow);
+    return () => query.removeEventListener('change', coerceIfNarrow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ResizablePanelGroup layout change event: triggered by user drags
   const handleLayout = (newLayout: Layout) => {
     if (isTransitioning) return;
@@ -256,6 +338,8 @@ export function App() {
         previewRef={previewRef}
         mode={mode}
         onModeChange={applyMode}
+        docName={documentId ? docName : null}
+        syncStatus={documentId ? syncStatus : 'idle'}
       />
 
       <div className="bg-background min-h-0 flex-1 select-text">
