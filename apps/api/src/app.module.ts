@@ -7,13 +7,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
 import { FilesModule } from './files/files.module.js';
 import { PdfModule } from './pdf/pdf.module.js';
+import { config, validateEnv } from './config.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     TypeOrmModule.forRoot({
       type: 'better-sqlite3',
-      database: process.env.DB_PATH ?? './data/resomd.db',
+      database: config.DB_PATH,
       autoLoadEntities: true,
       synchronize: true,
     }),

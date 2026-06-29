@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/select';
 import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { useDocumentTitle } from '@/lib/use-document-title';
 import {
   createDocument,
   createFolder,
@@ -269,6 +270,7 @@ function TreeRow({
 }
 
 export function FilesPage() {
+  useDocumentTitle('My Files');
   const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -303,7 +305,7 @@ export function FilesPage() {
 
   React.useEffect(() => {
     if (!isAuthLoading && !user) {
-      navigate('/auth');
+      navigate('/auth?redirect=/files');
       return;
     }
     if (user) {

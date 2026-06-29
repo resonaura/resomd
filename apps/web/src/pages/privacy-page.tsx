@@ -1,6 +1,9 @@
 import { PageShell } from '@/components/page-shell';
+import { AUTH_WEB_URL } from '@/lib/api';
+import { useDocumentTitle } from '@/lib/use-document-title';
 
 export function PrivacyPage() {
+  useDocumentTitle('Privacy Policy');
   return (
     <PageShell title="Privacy Policy" maxWidth="max-w-2xl">
       <div className="text-foreground/90 flex flex-col gap-6 text-sm leading-relaxed">
@@ -29,36 +32,51 @@ export function PrivacyPage() {
         </section>
 
         <section className="flex flex-col gap-2">
-          <h2 className="font-heading text-base font-medium">
-            What we collect with an account
-          </h2>
-          <p>If you create an account, we store:</p>
-          <ul className="ml-5 list-disc">
-            <li>Your email address.</li>
-            <li>
-              A salted, hashed version of your password (bcrypt, cost factor 12)
-              — we never store or have access to your plaintext password.
-            </li>
-            <li>
-              An optional display name and avatar URL, if you choose to set
-              them.
-            </li>
-            <li>
-              The documents and folders you save to your account, so they can
-              sync across devices.
-            </li>
-          </ul>
+          <h2 className="font-heading text-base font-medium">Authentication</h2>
+          <p>
+            ResoMD does not handle authentication directly. Sign-in, account
+            creation, and profile management are handled by our central auth
+            service at{' '}
+            <a href={AUTH_WEB_URL} className="underline underline-offset-2">
+              {AUTH_WEB_URL.replace(/^https?:\/\//, '')}
+            </a>
+            . When you sign in, the auth service sets a session cookie named{' '}
+            <code className="text-foreground">rsnra_session</code> that is
+            shared across all{' '}
+            <code className="text-foreground">.rsnra.com</code> subdomains (and
+            across <code className="text-foreground">localhost</code> ports in
+            development). This cookie contains a signed JWT that identifies your
+            account; it does not contain your password.
+          </p>
+          <p>
+            ResoMD never stores or processes passwords. No password hashes are
+            kept in the ResoMD database — identity is provided entirely by the
+            auth service.
+          </p>
         </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="font-heading text-base font-medium">
-            Sessions and local storage
+            What ResoMD stores
           </h2>
           <p>
-            After signing in, we store a signed authentication token (JWT) in
-            your browser's local storage, valid for up to 90 days. This token
-            identifies your account on requests to our API; it does not contain
-            your password.
+            When you save documents to the cloud, ResoMD stores the following
+            data linked to your auth user ID:
+          </p>
+          <ul className="ml-5 list-disc">
+            <li>
+              Your auth user ID (a UUID) and email address, synced from the auth
+              service, so documents can be linked to your account.
+            </li>
+            <li>
+              The documents and folders you save, so they can sync across
+              devices.
+            </li>
+          </ul>
+          <p>
+            Your display name, avatar, and other profile information are managed
+            by the auth service and are not duplicated or stored by ResoMD
+            beyond what is needed to link documents to your account.
           </p>
         </section>
 
@@ -72,6 +90,7 @@ export function PrivacyPage() {
             <li>
               We don't track anonymous usage analytics tied to your identity.
             </li>
+            <li>We don't store passwords or password hashes.</li>
           </ul>
         </section>
 
@@ -80,10 +99,18 @@ export function PrivacyPage() {
             Data retention and deletion
           </h2>
           <p>
-            Your account data and documents are kept for as long as your account
-            exists. Deleting your account (from the Account page) permanently
-            and immediately removes your user record along with every document
-            and folder you own. This cannot be undone.
+            Your documents and folders are kept for as long as your account
+            exists. You can delete individual documents and folders from the
+            Files page at any time. To delete your account and all associated
+            data across all rsnra.com services, use the account management page
+            on the{' '}
+            <a
+              href={`${AUTH_WEB_URL}/profile`}
+              className="underline underline-offset-2"
+            >
+              auth service
+            </a>
+            .
           </p>
         </section>
 
@@ -91,9 +118,14 @@ export function PrivacyPage() {
           <h2 className="font-heading text-base font-medium">Your rights</h2>
           <p>
             You can view and update your profile information at any time from
-            the Account page, and export your documents as markdown files
-            whenever you like. You can delete your account and all associated
-            data at any time, without needing to contact us.
+            the{' '}
+            <a
+              href={`${AUTH_WEB_URL}/profile`}
+              className="underline underline-offset-2"
+            >
+              auth service profile page
+            </a>
+            , and export your documents as markdown files whenever you like.
           </p>
         </section>
 
@@ -102,10 +134,10 @@ export function PrivacyPage() {
           <p>
             Questions about this policy? Reach out at{' '}
             <a
-              href="mailto:andrii.vynohradov@gmail.com"
+              href="mailto:resonaura@gmail.com"
               className="underline underline-offset-2"
             >
-              andrii.vynohradov@gmail.com
+              resonaura@gmail.com
             </a>
             .
           </p>

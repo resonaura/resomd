@@ -42,11 +42,13 @@ import {
   type AdminUser,
 } from '@/lib/admin-api';
 import { useAuth } from '@/lib/auth-context';
+import { useDocumentTitle } from '@/lib/use-document-title';
 
 type PendingUserDelete = { id: string; email: string };
 type PendingDocumentDelete = { id: string; name: string };
 
 export function AdminPage() {
+  useDocumentTitle('Admin');
   const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
 

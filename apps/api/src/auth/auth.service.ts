@@ -1,98 +1,79 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { User } from '../users/user.entity.js';
-import type { LoginDto } from './login.dto.js';
-import type { RegisterDto } from './register.dto.js';
-import type { UpdateProfileDto } from './update-profile.dto.js';
+import type { AuthenticatedUser } from './jwt-payload.js';
 
-const BCRYPT_COST = 12;
-
+// Auth is handled by the central auth service (rsnra-auth). This service
+// only manages the local user records needed for document ownership —
+// the id is the auth service user's UUID.
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
-    private readonly jwtService: JwtService
+    private readonly dataSource: DataSource
   ) {}
 
-  private signToken(user: User) {
-    return this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
-  }
-
-  private toPublic(user: User) {
-    return {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      role: user.role,
-    };
-  }
-
-  async register(dto: RegisterDto) {
-    const existing = await this.users.findOne({
-      where: { email: dto.email.toLowerCase() },
-    });
+  /**
+   * Find or create a local user record by the auth user's UUID. Called
+   * on every authenticated request (via JwtStrategy) so that document
+   * ownership references always resolve.
+   */
+  async findOrCreateUser(id: string, email: string): Promise<User> {
+    // Try by auth user ID first
+    const existing = await this.users.findOne({ where: { id } });
     if (existing) {
-      throw new ConflictException('Email is already registered');
+      if (existing.email !== email) {
+        existing.email = email;
+        await this.users.save(existing);
+      }
+      return existing;
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_COST);
+    // Fallback: find by email — handles users created before the
+    // OAuth integration whose local ID differs from the auth UUID.
+    // Migrate their documents/folders to the new auth UUID.
+    const legacyUser = await this.users.findOne({
+      where: { email: email.toLowerCase() },
+    });
+    if (legacyUser) {
+      // Migrate ownership of all documents and folders to the auth UUID.
+      await this.dataSource.query(
+        'UPDATE documents SET owner_id = ? WHERE owner_id = ?',
+        [id, legacyUser.id]
+      );
+      await this.dataSource.query(
+        'UPDATE folders SET owner_id = ? WHERE owner_id = ?',
+        [id, legacyUser.id]
+      );
+      // Delete the legacy user and create a clean one with the auth UUID.
+      await this.users.delete({ id: legacyUser.id });
+    }
+
     const user = this.users.create({
-      email: dto.email.toLowerCase(),
-      passwordHash,
-      displayName: dto.displayName ?? null,
+      id,
+      email,
+      passwordHash: null,
+      displayName: null,
       avatarUrl: null,
       role: 'user',
     });
-    await this.users.save(user);
-
-    return { accessToken: this.signToken(user), user: this.toPublic(user) };
+    return this.users.save(user);
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.users.findOne({
-      where: { email: dto.email.toLowerCase() },
-    });
-    if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    return { accessToken: this.signToken(user), user: this.toPublic(user) };
-  }
-
-  async me(userId: string) {
-    const user = await this.users.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return this.toPublic(user);
-  }
-
-  async updateProfile(userId: string, dto: UpdateProfileDto) {
-    const user = await this.users.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (dto.displayName !== undefined) user.displayName = dto.displayName;
-    if (dto.avatarUrl !== undefined) user.avatarUrl = dto.avatarUrl;
-    await this.users.save(user);
-    return this.toPublic(user);
-  }
-
-  async deleteAccount(userId: string) {
-    await this.users.delete({ id: userId });
+  /**
+   * Returns the local user record. Profile fields (displayName, avatarUrl)
+   * are managed on auth.rsnra.com; the values here may be stale or null.
+   */
+  async me(user: AuthenticatedUser) {
+    const local = await this.findOrCreateUser(user.id, user.email);
+    return {
+      id: local.id,
+      email: user.email,
+      displayName: user.displayName ?? null,
+      avatarUrl: user.avatarUrl ?? null,
+      role: user.role,
+    };
   }
 }

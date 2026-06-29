@@ -1,56 +1,50 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Post,
-  Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 
 import { AuthService } from './auth.service.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import type { AuthenticatedUser } from './jwt-payload.js';
-import { LoginDto } from './login.dto.js';
-import { RegisterDto } from './register.dto.js';
-import { UpdateProfileDto } from './update-profile.dto.js';
 
+// Authentication (login, register, profile, password) is handled by the
+// central auth service at auth.rsnra.com. This controller exposes a
+// lightweight /me endpoint so the resomd web app can confirm the shared
+// session cookie is valid, and a /logout endpoint to clear it.
 @Controller({ path: 'auth' })
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
-  }
-
-  @Post('login')
-  @HttpCode(200)
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
-  }
-
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: AuthenticatedUser) {
-    return this.authService.me(user.id);
+    return this.authService.me(user);
   }
 
-  @Put('me')
-  @UseGuards(JwtAuthGuard)
-  updateMe(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: UpdateProfileDto
-  ) {
-    return this.authService.updateProfile(user.id, dto);
-  }
-
-  @Delete('me')
-  @UseGuards(JwtAuthGuard)
+  @Post('logout')
   @HttpCode(204)
-  async deleteMe(@CurrentUser() user: AuthenticatedUser) {
-    await this.authService.deleteAccount(user.id);
+  logout(@Res({ passthrough: true }) reply: FastifyReply) {
+    // Clear the shared session cookie. The cookie domain matches what
+    // the auth service uses (localhost in dev, .rsnra.com in prod).
+    const isProduction = process.env.NODE_ENV === 'production';
+    const domain =
+      process.env.COOKIE_DOMAIN ?? (isProduction ? '.rsnra.com' : 'localhost');
+    const sameSite = isProduction ? 'Lax' : 'None';
+    const attributes = [
+      'rsnra_session=',
+      'Path=/',
+      'HttpOnly',
+      `SameSite=${sameSite}`,
+      'Max-Age=0',
+      `Domain=${domain}`,
+      'Secure',
+    ];
+    reply.header('Set-Cookie', attributes.join('; '));
   }
 }

@@ -63,7 +63,7 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.6497 0.2383 17.9);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -98,7 +98,7 @@
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.6497 0.2383 17.9);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -205,6 +205,120 @@
   .markdown-preview li > ul,
   .markdown-preview li > ol {
     margin-top: 0.25em;
+    margin-bottom: 0;
+  }
+
+  /* ── Task lists (GFM checklists) ── */
+  .markdown-preview .markdown-task-item {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5em;
+    margin-left: -1.2em;
+  }
+
+  .markdown-preview .markdown-checkbox {
+    margin-top: 0.35em;
+    width: 1em;
+    height: 1em;
+    accent-color: var(--primary);
+    cursor: default;
+    flex-shrink: 0;
+  }
+
+  .markdown-preview .markdown-task-item > p {
+    margin: 0;
+  }
+
+  /* ── Footnotes (GFM) ── */
+  .markdown-preview .footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid var(--border);
+    font-size: 0.8em;
+    color: var(--muted-foreground);
+  }
+
+  .markdown-preview .footnotes ol {
+    padding-left: 1.2em;
+  }
+
+  .markdown-preview .footnotes li {
+    margin-top: 0.4em;
+  }
+
+  .markdown-preview sup {
+    font-size: 0.7em;
+    vertical-align: super;
+    line-height: 0;
+  }
+
+  .markdown-preview sup a {
+    text-decoration: none;
+  }
+
+  .markdown-preview .data-footnote-backref {
+    text-decoration: none;
+  }
+
+  /* ── GitHub-style admonitions (blockquote alerts) ── */
+  .markdown-preview .markdown-alert {
+    margin: 1.1em 0;
+    padding: 0.6em 1em;
+    border-left: 3px solid var(--border);
+    border-radius: 0 0.4rem 0.4rem 0;
+    background: var(--muted);
+  }
+
+  .markdown-preview .markdown-alert-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-weight: 600;
+    font-size: 0.9em;
+    margin-bottom: 0.3em;
+  }
+
+  .markdown-preview .markdown-alert-note {
+    border-left-color: #0969da;
+  }
+  .markdown-preview .markdown-alert-note .markdown-alert-title {
+    color: #0969da;
+  }
+
+  .markdown-preview .markdown-alert-tip {
+    border-left-color: #1a7f37;
+  }
+  .markdown-preview .markdown-alert-tip .markdown-alert-title {
+    color: #1a7f37;
+  }
+
+  .markdown-preview .markdown-alert-important {
+    border-left-color: #8250df;
+  }
+  .markdown-preview .markdown-alert-important .markdown-alert-title {
+    color: #8250df;
+  }
+
+  .markdown-preview .markdown-alert-warning {
+    border-left-color: #9a6700;
+  }
+  .markdown-preview .markdown-alert-warning .markdown-alert-title {
+    color: #9a6700;
+  }
+
+  .markdown-preview .markdown-alert-caution {
+    border-left-color: #cf222e;
+  }
+  .markdown-preview .markdown-alert-caution .markdown-alert-title {
+    color: #cf222e;
+  }
+
+  .markdown-preview .markdown-alert > :first-child {
+    margin-top: 0;
+  }
+
+  .markdown-preview .markdown-alert > :last-child {
     margin-bottom: 0;
   }
 

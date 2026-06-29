@@ -3,19 +3,15 @@ const API_URL =
   import.meta.env.VITE_PDF_SERVER_URL ??
   'http://localhost:3004';
 
-const TOKEN_STORAGE_KEY = 'resomd:token';
+// Central auth service — login, registration, and profile management
+// happen there. The resomd web app relies on the shared `rsnra_session`
+// cookie (same domain in prod, same localhost in dev) instead of a local
+// token.
+export const AUTH_API_URL =
+  import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:2998';
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-export function setToken(token: string | null) {
-  if (token) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-  } else {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-  }
-}
+export const AUTH_WEB_URL =
+  import.meta.env.VITE_AUTH_WEB_URL ?? 'http://localhost:2999';
 
 export class ApiError extends Error {
   status: number;
@@ -30,16 +26,13 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getToken();
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
 
   const response = await fetch(`${API_URL}/v1${path}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (!response.ok) {

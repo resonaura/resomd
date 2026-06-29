@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import * as React from 'react';
 
-import { apiFetch, getToken, setToken } from '@/lib/api';
+import { AUTH_WEB_URL, apiFetch } from '@/lib/api';
 
 export interface AuthUser {
   id: string;
@@ -11,26 +11,11 @@ export interface AuthUser {
   role: 'user' | 'admin';
 }
 
-interface AuthResponse {
-  accessToken: string;
-  user: AuthUser;
-}
-
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    displayName?: string
-  ) => Promise<void>;
-  logout: () => void;
-  updateProfile: (input: {
-    displayName?: string;
-    avatarUrl?: string;
-  }) => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  signIn: (redirectPath?: string) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(
@@ -39,73 +24,54 @@ const AuthContext = React.createContext<AuthContextValue | undefined>(
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = React.useState(() => getToken() !== null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
+  // On mount, check if the user is logged in via the shared session cookie.
+  // The resomd API reads the `rsnra_session` cookie (shared across localhost
+  // ports in dev, .rsnra.com in prod) and verifies the JWT with the same
+  // JWT_SECRET as the auth service.
   React.useEffect(() => {
-    if (!getToken()) {
-      return;
-    }
-
+    let cancelled = false;
     apiFetch<AuthUser>('/auth/me')
-      .then(setUser)
-      .catch(() => setToken(null))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  const login = React.useCallback(async (email: string, password: string) => {
-    const response = await apiFetch<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    setToken(response.accessToken);
-    setUser(response.user);
-  }, []);
-
-  const register = React.useCallback(
-    async (email: string, password: string, displayName?: string) => {
-      const response = await apiFetch<AuthResponse>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, displayName }),
+      .then(data => {
+        if (cancelled) return;
+        setUser(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setUser(null);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setIsLoading(false);
       });
-      setToken(response.accessToken);
-      setUser(response.user);
-    },
-    []
-  );
 
-  const logout = React.useCallback(() => {
-    setToken(null);
-    setUser(null);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const updateProfile = React.useCallback(
-    async (input: { displayName?: string; avatarUrl?: string }) => {
-      const updated = await apiFetch<AuthUser>('/auth/me', {
-        method: 'PUT',
-        body: JSON.stringify(input),
-      });
-      setUser(updated);
-    },
-    []
-  );
+  const signIn = React.useCallback((redirectPath?: string) => {
+    const target =
+      redirectPath ?? window.location.pathname + window.location.search;
+    const redirectUrl = `${window.location.origin}${target}`;
+    window.location.href = `${AUTH_WEB_URL}/auth?redirect=${encodeURIComponent(
+      redirectUrl
+    )}&client_id=resomd`;
+  }, []);
 
-  const deleteAccount = React.useCallback(async () => {
-    await apiFetch<void>('/auth/me', { method: 'DELETE' });
-    setToken(null);
+  const logout = React.useCallback(async () => {
+    try {
+      await apiFetch<void>('/auth/logout', { method: 'POST' });
+    } catch {
+      // Even if the network call fails, clear local state.
+    }
     setUser(null);
   }, []);
 
   const value = React.useMemo(
-    () => ({
-      user,
-      isLoading,
-      login,
-      register,
-      logout,
-      updateProfile,
-      deleteAccount,
-    }),
-    [user, isLoading, login, register, logout, updateProfile, deleteAccount]
+    () => ({ user, isLoading, signIn, logout }),
+    [user, isLoading, signIn, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
