@@ -11,15 +11,37 @@
 import { join } from 'node:path';
 import {
   parseEnvFile,
-  writeEnvFile,
-  promptString,
-  promptSecretOrGenerate,
-  promptPasswordOrGenerate,
-  printHeader,
   printDone,
+  printHeader,
+  promptPasswordOrGenerate,
+  promptSecretOrGenerate,
+  promptString,
+  writeEnvFile,
 } from './setup-utils.mjs';
 
 const ROOT = import.meta.dirname;
+
+/**
+ * Read a value from a sibling project's .env file. Pulls shared values
+ * (JWT_SECRET, AUTH_API_URL, etc.) from already-configured services instead
+ * of re-prompting the user.
+ */
+async function readFromSibling(project, app, key) {
+  const candidates = [
+    join(ROOT, '..', '..', project, 'apps', app, '.env'),
+    join(ROOT, '..', project, 'apps', app, '.env'),
+  ];
+  for (const p of candidates) {
+    try {
+      const { values } = await parseEnvFile(p);
+      const v = values.get(key);
+      if (v) return v;
+    } catch {
+      // file doesn't exist — try next
+    }
+  }
+  return undefined;
+}
 
 async function setupApi() {
   printHeader('resomd API (port 3004)');
@@ -32,11 +54,15 @@ async function setupApi() {
     values.get('DB_PATH') ?? './data/resomd.db'
   );
 
-  // JWT secret — must match rsnra-auth
+  // JWT secret — must match rsnra-auth. Pull from auth .env if available.
+  const authJwt = await readFromSibling('rsnra-auth', 'api', 'JWT_SECRET');
   const jwtSecret = await promptSecretOrGenerate(
     'JWT secret (must match rsnra-auth)',
-    values.get('JWT_SECRET')
+    values.get('JWT_SECRET') ?? authJwt
   );
+  if (authJwt && authJwt === jwtSecret) {
+    console.log('  ✓ Pulled JWT_SECRET from rsnra-auth .env');
+  }
 
   const corsOrigins = await promptString(
     'CORS origins (comma-separated)',
@@ -51,11 +77,10 @@ async function setupApi() {
   );
 
   const currentAdminPass = values.get('ADMIN_PASSWORD');
-  const isAlreadyHashed = currentAdminPass && currentAdminPass.startsWith('$2');
 
   const { plain: adminPlain, hash: adminHash } = await promptPasswordOrGenerate(
     'AdminJS panel password',
-    isAlreadyHashed ? currentAdminPass : undefined
+    currentAdminPass
   );
 
   if (adminPlain) {
@@ -70,10 +95,18 @@ async function setupApi() {
     48
   );
 
+  // Pull AUTH_API_URL from auth .env if available
+  const authPort = await readFromSibling('rsnra-auth', 'api', 'PORT');
+  const authApiUrlDefault =
+    values.get('AUTH_API_URL') ??
+    (authPort ? `http://localhost:${authPort}` : 'http://localhost:2998');
   const authApiUrl = await promptString(
     'Auth service API URL',
-    values.get('AUTH_API_URL') ?? 'http://localhost:2998'
+    authApiUrlDefault
   );
+  if (authPort) {
+    console.log('  ✓ Pulled AUTH_API_URL from rsnra-auth .env');
+  }
 
   const entries = [
     {
