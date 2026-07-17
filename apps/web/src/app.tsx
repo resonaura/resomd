@@ -1304,6 +1304,7 @@ export function App() {
         mode={mode}
         onModeChange={applyMode}
         selectedDocId={activeTab?.documentId ?? null}
+        activeDocName={activeDocName}
         menubarActions={actions}
         platform={platform}
         sidebarVisible={sidebarVisible}

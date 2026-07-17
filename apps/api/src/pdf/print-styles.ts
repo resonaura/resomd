@@ -1,10 +1,25 @@
 /** Mirrors the print overrides the client used to apply for window.print(). */
 export const PDF_PRINT_STYLES = `
   @page { size: A4; margin: 20mm; }
-  body { background: white; color: black; margin: 0; padding: 0; }
+  
+  /* Force exact color rendering — prevents browser from adjusting colors */
+  *, *::before, *::after {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: white;
+    color: #1d1d1f;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
   .markdown-preview {
     background: transparent;
-    color: black;
+    color: #1d1d1f;
     padding: 0;
     width: 100%;
     max-width: 100%;
@@ -13,6 +28,7 @@ export const PDF_PRINT_STYLES = `
     overflow: visible;
     position: static;
   }
+
   .rsnra-logo-img { height: 1.8em; width: auto; }
   .rsnra-logo-container {
     height: 1.8em;
@@ -20,13 +36,38 @@ export const PDF_PRINT_STYLES = `
     align-items: center;
     vertical-align: middle;
   }
-  tr, pre, blockquote, img, li {
-    page-break-inside: avoid;
-    break-inside: avoid;
+
+  /* Page break rules */
+  tr, pre, blockquote, img, table, .markdown-alert, ul, ol {
+    page-break-inside: avoid !important;
+    break-inside: avoid-page !important;
+    break-inside: avoid !important;
   }
+
+  h2:not(:first-of-type) {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    page-break-after: avoid;
-    break-after: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid-page !important;
+    break-after: avoid !important;
+  }
+
+  /* Keep headings bonded to the immediately following content */
+  h1 + *, h2 + *, h3 + *, h4 + *, h5 + *, h6 + * {
+    page-break-before: avoid !important;
+    break-before: avoid-page !important;
+    break-before: avoid !important;
+  }
+
+  /* Force page break before h3 when it follows a diagram code block */
+  pre + h3 {
+    page-break-before: always !important;
+    break-before: page !important;
   }
 
   /* Task list checkboxes */
@@ -60,32 +101,173 @@ export const PDF_PRINT_STYLES = `
   sup a { text-decoration: none; }
   .data-footnote-backref { text-decoration: none; }
 
-  /* GitHub-style admonitions */
+  /* Apple-style alert blocks with solid Apple colors and correct rounded corners */
   .markdown-alert {
     margin: 1.1em 0;
-    padding: 0.6em 1em;
-    border-left: 3px solid #ccc;
-    border-radius: 0 0.4rem 0.4rem 0;
-    background: #f6f8fa;
+    padding: 0.8em 1.2em;
+    border-left: 4px solid #ccc;
+    border-radius: 8px !important;
+    background: #f5f5f7 !important;
   }
   .markdown-alert-title {
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5em;
     font-weight: 600;
     font-size: 0.9em;
-    margin-bottom: 0.3em;
+    margin-bottom: 0.4em;
+    line-height: 1.4;
   }
-  .markdown-alert-note { border-left-color: #0969da; }
-  .markdown-alert-note .markdown-alert-title { color: #0969da; }
-  .markdown-alert-tip { border-left-color: #1a7f37; }
-  .markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
-  .markdown-alert-important { border-left-color: #8250df; }
-  .markdown-alert-important .markdown-alert-title { color: #8250df; }
-  .markdown-alert-warning { border-left-color: #9a6700; }
-  .markdown-alert-warning .markdown-alert-title { color: #9a6700; }
-  .markdown-alert-caution { border-left-color: #cf222e; }
-  .markdown-alert-caution .markdown-alert-title { color: #cf222e; }
+  .markdown-alert-title svg,
+  .markdown-alert-title .octicon {
+    fill: currentColor !important;
+    color: inherit !important;
+    width: 1em;
+    height: 1em;
+    display: inline-block !important;
+    vertical-align: middle !important;
+  }
+
+  /* NOTE — Blue */
+  .markdown-alert-note {
+    border-left-color: #007aff !important;
+    background-color: #e8f2ff !important;
+  }
+  .markdown-alert-note .markdown-alert-title {
+    color: #007aff !important;
+  }
+
+  /* TIP — Green */
+  .markdown-alert-tip {
+    border-left-color: #34c759 !important;
+    background-color: #e8f8ed !important;
+  }
+  .markdown-alert-tip .markdown-alert-title {
+    color: #34c759 !important;
+  }
+
+  /* IMPORTANT — Purple */
+  .markdown-alert-important {
+    border-left-color: #af52de !important;
+    background-color: #f3e8fc !important;
+  }
+  .markdown-alert-important .markdown-alert-title {
+    color: #af52de !important;
+  }
+
+  /* WARNING — Orange */
+  .markdown-alert-warning {
+    border-left-color: #ff9500 !important;
+    background-color: #fff4e0 !important;
+  }
+  .markdown-alert-warning .markdown-alert-title {
+    color: #ff9500 !important;
+  }
+
+  /* CAUTION — Red */
+  .markdown-alert-caution {
+    border-left-color: #ff3b30 !important;
+    background-color: #ffe8e7 !important;
+  }
+  .markdown-alert-caution .markdown-alert-title {
+    color: #ff3b30 !important;
+  }
+
   .markdown-alert > :first-child { margin-top: 0; }
   .markdown-alert > :last-child { margin-bottom: 0; }
+
+  /* Pre / code blocks */
+  pre, pre code {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow-x: visible !important;
+  }
+  pre {
+    background: #f5f5f7 !important;
+    color: #1d1d1f !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 0.8em !important;
+    font-size: 0.78em !important;
+  }
+
+  /* Mermaid charts */
+  .mermaid-chart {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #f5f5f7 !important;
+    border-radius: 12px !important;
+    padding: 1.4em 1.2em !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  .mermaid-chart svg {
+    background: transparent !important;
+  }
+  .mermaid-chart svg .cluster rect,
+  .mermaid-chart svg .subgraph rect {
+    fill: transparent !important;
+    stroke: none !important;
+    stroke-width: 0 !important;
+  }
+
+  /* Rounded node corners */
+  .mermaid-chart svg .node rect {
+    rx: 10px !important;
+    ry: 10px !important;
+    stroke-width: 0 !important;
+  }
+
+  /* Node text */
+  .mermaid-chart svg .node text {
+    fill: #ffffff !important;
+    font-weight: 500 !important;
+  }
+
+  /* Edges — Light Mode: Solid Black Line, NO FILL */
+  .mermaid-chart svg .edgePath path {
+    fill: none !important;
+    stroke: #1d1d1f !important;
+    stroke-width: 2.5px !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+  .mermaid-chart svg marker path {
+    fill: #1d1d1f !important;
+    stroke: #1d1d1f !important;
+    stroke-width: 1px !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  /* Edge labels */
+  .mermaid-chart svg .edgeLabel rect {
+    fill: #f5f5f7 !important;
+    stroke: none !important;
+    stroke-width: 0 !important;
+  }
+  .mermaid-chart svg .edgeLabel foreignObject div,
+  .mermaid-chart svg .edgeLabel foreignObject span {
+    color: #1d1d1f !important;
+    background-color: #f5f5f7 !important;  /* solid light-mode card background under text */
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    border: none !important;
+  }
+  .mermaid-chart svg .edgeLabel text,
+  .mermaid-chart svg .edgeLabel tspan {
+    color: #1d1d1f !important;
+    fill: #1d1d1f !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Apple light-mode node color styles (override dark themes baked inside clone) */
+  .mermaid-chart svg .node.c0 rect { fill: #007aff !important; }
+  .mermaid-chart svg .node.c1 rect { fill: #34c759 !important; }
+  .mermaid-chart svg .node.c2 rect { fill: #ff9500 !important; }
+  .mermaid-chart svg .node.c3 rect { fill: #af52de !important; }
+  .mermaid-chart svg .node.c4 rect { fill: #5ac8fa !important; }
+  .mermaid-chart svg .node.c5 rect { fill: #ff3b30 !important; }
 `;

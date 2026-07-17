@@ -91,9 +91,23 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
       await page.evaluate(waitForImagesToSettle);
       await page.evaluate(() => document.fonts.ready);
 
+      await page.evaluate(() => {
+        const MAX_WIDTH = 650;
+        document.querySelectorAll<SVGSVGElement>('.mermaid-chart svg').forEach(svg => {
+          const rect = svg.getBoundingClientRect();
+          if (rect.width > MAX_WIDTH) {
+            const scale = MAX_WIDTH / rect.width;
+            svg.setAttribute('width', String(MAX_WIDTH));
+            svg.setAttribute('height', String(Math.round(rect.height * scale)));
+          }
+        });
+      });
+
       const pdf = await page.pdf({
         printBackground: true,
         preferCSSPageSize: true,
+        outline: true,
+        tagged: true,
       });
 
       return Buffer.from(pdf);

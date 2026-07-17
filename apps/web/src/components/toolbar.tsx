@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ColumnsIcon,
@@ -53,6 +54,7 @@ interface AppToolbarProps {
   mode: 'editor' | 'split' | 'preview';
   onModeChange: (mode: 'editor' | 'split' | 'preview') => void;
   selectedDocId?: string | null;
+  activeDocName?: string | null;
   // Menubar (now embedded in the toolbar)
   menubarActions: MenubarActions;
   platform: Platform;
@@ -67,6 +69,7 @@ export function AppToolbar({
   mode,
   onModeChange,
   selectedDocId = null,
+  activeDocName = null,
   menubarActions,
   platform,
   sidebarVisible,
@@ -125,7 +128,38 @@ export function AppToolbar({
     }
     setIsExporting(true);
     try {
-      await exportNodeToPdfViaServer(node);
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 hour is 12
+
+      const timeStr = `${pad(hours)}-${pad(now.getMinutes())}-${pad(now.getSeconds())}_${ampm}`;
+      const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+      const timestamp = `${dateStr}_${timeStr}`;
+
+      let baseName = 'document';
+      if (activeDocName) {
+        baseName = activeDocName.replace(/\.[^/.]+$/, '');
+      } else {
+        const h1 = node.querySelector('h1');
+        if (h1 && h1.textContent) {
+          const rawText = h1.textContent.trim();
+          // Remove only characters forbidden in Windows filenames: < > : " / \ | ? * and control chars
+          const sanitized = rawText
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+            .trim();
+          if (sanitized) {
+            baseName = sanitized;
+          }
+        }
+      }
+
+      const exportFilename = `${baseName}_${timestamp}.pdf`;
+
+      await exportNodeToPdfViaServer(node, exportFilename);
       toast.success('PDF exported');
     } catch (error) {
       console.error(error);
