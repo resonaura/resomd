@@ -2,11 +2,11 @@
 
 # ResoMD
 
-[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/Version-0.0.1-blue.svg)](package.json)
 [![Web](https://img.shields.io/badge/Web-React%2019%20%7C%20Vite%20%7C%20Tailwind%20v4-61DAFB.svg?logo=react&logoColor=black)](apps/web)
 [![API](https://img.shields.io/badge/API-NestJS%20%7C%20Fastify-E0234E.svg?logo=nestjs&logoColor=white)](apps/api)
 [![Editor](https://img.shields.io/badge/Editor-Monaco-blue.svg)](apps/web)
-[![Live](https://img.shields.io/badge/Live-md.rsnra.com-8A2BE2.svg)](https://md.rsnra.com)
+[![Website](https://img.shields.io/badge/Website-md.rsnra.com-8A2BE2.svg)](https://md.rsnra.com)
 
 A high-performance Markdown editor with live preview, block-based scroll synchronization, cloud document storage with autosave, and server-side PDF export.
 
