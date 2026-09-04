@@ -10,6 +10,11 @@
 
 A high-performance Markdown editor with live preview, block-based scroll synchronization, cloud document storage with autosave, and server-side PDF export.
 
+
+<p align="center">
+  <img src="media/resomd-editor.png" width="800" alt="ResoMD Split-Pane Markdown Editor" />
+</p>
+
 ---
 
 ## Services
