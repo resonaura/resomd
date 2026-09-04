@@ -7,6 +7,7 @@
 [![API](https://img.shields.io/badge/API-NestJS%20%7C%20Fastify-E0234E.svg?logo=nestjs&logoColor=white)](apps/api)
 [![Editor](https://img.shields.io/badge/Editor-Monaco-blue.svg)](apps/web)
 [![Website](https://img.shields.io/badge/Website-md.rsnra.com-8A2BE2.svg)](https://md.rsnra.com)
+
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/resonaura)
 
 A high-performance Markdown editor with live preview, block-based scroll synchronization, cloud document storage with autosave, and server-side PDF export.
