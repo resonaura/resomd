@@ -1,20 +1,22 @@
-<img src="icon.svg" width="64" height="64" alt="ResoMD Icon" />
+<img src="https://raw.githubusercontent.com/resonaura/resomd/main/icon.svg" width="64" height="64" alt="ResoMD Icon" />
 
 # ResoMD
 
 [![Version](https://img.shields.io/badge/Version-0.0.1-blue.svg)](package.json)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Web](https://img.shields.io/badge/Web-React%2019%20%7C%20Vite%20%7C%20Tailwind%20v4-61DAFB.svg?logo=react&logoColor=black)](apps/web)
 [![API](https://img.shields.io/badge/API-NestJS%20%7C%20Fastify-E0234E.svg?logo=nestjs&logoColor=white)](apps/api)
 [![Editor](https://img.shields.io/badge/Editor-Monaco-blue.svg)](apps/web)
 [![Website](https://img.shields.io/badge/Website-md.rsnra.com-8A2BE2.svg)](https://md.rsnra.com)
 
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor%20on%20GitHub-EA4AAA?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/resonaura)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/resonaura)
 
 A high-performance Markdown editor with live preview, block-based scroll synchronization, cloud document storage with autosave, and server-side PDF export.
 
 
 <p align="center">
-  <img src="media/resomd-editor.png" width="800" alt="ResoMD Split-Pane Markdown Editor" />
+  <img src="https://raw.githubusercontent.com/resonaura/resomd/main/media/resomd-editor.png" width="800" alt="ResoMD Split-Pane Markdown Editor" />
 </p>
 
 ---
